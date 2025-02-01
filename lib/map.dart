@@ -71,6 +71,19 @@ class MapSampleState extends State<MapSample> {
   // BUILD !!!
   @override
   Widget build(BuildContext context) {
+    Set<Marker> markers = {};
+    for (var i = 0; i < userLocations.length; i++) {
+      var location = userLocations[i];
+      var pinIcon = pinIcons[i % pinIcons.length];
+      markers.add(
+        Marker(
+          markerId: MarkerId(location["username"]),
+          position: location["location"],
+          infoWindow: InfoWindow(title: location["username"]),
+          icon: pinIcon,
+        ),
+      );
+    }
     return Scaffold(
       body: currentLocation == null
         ? const Center(child: Text("Loading"))
