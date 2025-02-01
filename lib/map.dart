@@ -63,6 +63,15 @@ class MapSampleState extends State<MapSample> {
   void initState() {
     getCurrentLocation();
     super.initState();
+    _currentCircleRadius = widget.radius ?? 10.0;
+    if (userLocations.isNotEmpty) {
+      _circlePosition = userLocations[0]['location'];
+    }
+    //updating locations
+    Timer.periodic(Duration(minutes: 1), (Timer timer) {
+      // call function to update user locations
+      updateFirstUserLocation(); // demo x
+    });
   }
 
 
