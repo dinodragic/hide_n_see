@@ -5,8 +5,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
 import 'package:flutter_application_1/toast.dart';
+import 'package:geocoding/geocoding.dart' show Placemark, placemarkFromCoordinates;
 
 class MapSample extends StatefulWidget {
+<<<<<<< HEAD
   const MapSample(
       {super.key,
       required this.username,
@@ -14,12 +16,27 @@ class MapSample extends StatefulWidget {
       required this.seeker,
       required this.radius,
       required this.timeInterval});
+=======
+
+  const MapSample({
+    super.key,
+    required this.username,
+    required this.ip,
+
+    required this.startLoc,
+    required this.radius,
+    required this.timeInterval,
+    required this.seeker,
+    });
+>>>>>>> bc81dae (Mlslm da sve sad radi! :))
 
   final String username;
   final String ip;
-  final bool seeker;
+
+  final String startLoc;
   final double radius;
   final int timeInterval;
+  final String seeker;
 
   @override
   State<MapSample> createState() => MapSampleState();
@@ -89,8 +106,7 @@ class MapSampleState extends State<MapSample> {
 
   double _currentCircleRadius = 0.0;
   LatLng _circlePosition = const LatLng(0, 0);
-  Map<String, Map<String, String>> userLocations = {};
-  LocationData? currentLocation;
+  Map<String, dynamic> userLocations = {};
 
 <<<<<<< HEAD
 >>>>>>> cb08bef (postavljanje vlastite lokacije na server)
@@ -107,16 +123,14 @@ class MapSampleState extends State<MapSample> {
     getCurrentLocation();
     super.initState();
 
-    getCurrentLocation();
-
     _currentCircleRadius = widget.radius;
-    _circlePosition = LatLng(currentLocation!.latitude!, currentLocation!.longitude!);
+    List<String> coords = widget.startLoc.split(" ");
+    _circlePosition = LatLng(double.parse(coords[0]), double.parse(coords[1]));
 
     
     Timer.periodic(const Duration(seconds: 10), (Timer timer) async{
       // call function to update user locations
       sendMyLocation();
-      //getOtherLocations(url);
     });
   }
 
@@ -128,10 +142,9 @@ class MapSampleState extends State<MapSample> {
   Widget build(BuildContext context) {
     Set<Marker> markers = {};
 
-    // add other users
     int i=0;
     for (var location in userLocations.entries) {
-      if(location.value["location"] != null){
+      if(location.value["location"] != null && location.key != widget.username){
         
         List<String> coords = location.value["location"]!.split(" ");
         LatLng latLng = LatLng(double.parse(coords[0]), double.parse(coords[1]));
@@ -168,10 +181,9 @@ class MapSampleState extends State<MapSample> {
           _controller.complete(controller);
 =======
 
-      body: currentLocation == null
-      //poboljsat loading screen treba
-      ? const Center(child: Text("Loading"))
-      : GoogleMap(
+      body: GoogleMap(
+        myLocationButtonEnabled: true,
+        myLocationEnabled: true,
         mapType: MapType.normal,
         initialCameraPosition: CameraPosition(
           target: _circlePosition, // camera position to the circle's position
@@ -181,19 +193,38 @@ class MapSampleState extends State<MapSample> {
           _controller.complete(mapController);
 >>>>>>> a661eae (slanje vlastite lokacije na server)
         },
+<<<<<<< HEAD
         markers: {
           Marker(
             markerId: const MarkerId("MyMarker"),
             position: LatLng(currentLocation!.latitude!, currentLocation!.longitude!)
           )
+=======
+        markers: markers,
+        circles: <Circle>{
+          Circle(
+            circleId: const CircleId("Zona"),
+            center:
+                _circlePosition, // center of the circle to the circle's position(player0 start position)
+            radius: _currentCircleRadius * 1000,
+            fillColor: Colors.red.withOpacity(0.3),
+            strokeColor: Colors.red,
+            strokeWidth: 2,
+          ),
+>>>>>>> bc81dae (Mlslm da sve sad radi! :))
         },
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: FloatingActionButton.extended(
+<<<<<<< HEAD
 <<<<<<< HEAD
         onPressed: () => goToLoc(LatLng(currentLocation!.latitude!, currentLocation!.longitude!)),
         label: const Text('My Location'),
 =======
         onPressed: () => getOtherLocations(),
+=======
+        onPressed: getOtherLocations,
+>>>>>>> bc81dae (Mlslm da sve sad radi! :))
         label: const Text('Get locations'),
 >>>>>>> a661eae (slanje vlastite lokacije na server)
         icon: const Icon(Icons.gps_fixed),
@@ -209,29 +240,18 @@ class MapSampleState extends State<MapSample> {
             bearing: 0.0, target: pos, tilt: 0.0, zoom: defaultZoom)));
 =======
 
-  void getCurrentLocation() async {
-    Location location = Location();
-    location.getLocation().then(
-      (location) {
-        currentLocation = location;
-      },
-    );
-
-    location.onLocationChanged.listen(
-      (newLoc) {
-        currentLocation = newLoc;
-        setState(() {});
-      },
-    );
-  }
-
   void sendMyLocation() async {
+    LocationData currentLocation = await Location().getLocation();
+    String myLocation = "${currentLocation.latitude} ${currentLocation.longitude}";
+    
+    List<String> myCoords = myLocation.split(" ");
+    List<Placemark> placemarks = await placemarkFromCoordinates(double.parse(myCoords[0]), double.parse(myCoords[1]));
+    String myAddress = placemarks[0].street ?? "";
 
     Map body = {
       "username": widget.username,
-      "location": "${currentLocation!.latitude!} ${currentLocation!.longitude!}",
-      //mozda dodam address ak mi se bude dalo :/
-      "address": ""
+      "location": myLocation,
+      "address": myAddress
     };
 
     Uri url = Uri.http("${widget.ip}:8000", "locations");
