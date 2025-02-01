@@ -1,21 +1,24 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-//import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
+import 'package:flutter_application_1/toast.dart';
 
 class MapSample extends StatefulWidget {
   const MapSample(
       {super.key,
+      required this.username,
       required this.ip,
       required this.seeker,
-      this.radius,
-      this.timeInterval});
+      required this.radius,
+      required this.timeInterval});
 
+  final String username;
   final String ip;
   final bool seeker;
-  final double? radius;
-  final int? timeInterval;
+  final double radius;
+  final int timeInterval;
 
   @override
   State<MapSample> createState() => MapSampleState();
@@ -59,18 +62,63 @@ class MapSampleState extends State<MapSample> {
     );
   }
 
+<<<<<<< HEAD
+=======
+
+
+  double _currentCircleRadius = 0.0;
+
+  LatLng _circlePosition = const LatLng(0, 0);
+
+  List<Map<String, dynamic>> userLocations = [];
+
+  List<BitmapDescriptor> pinIcons = [
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueMagenta),
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose),
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+    BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),
+  ];
+
+
+>>>>>>> cb08bef (postavljanje vlastite lokacije na server)
   @override
   void initState() {
     getCurrentLocation();
     super.initState();
-    _currentCircleRadius = widget.radius ?? 10.0;
+    _currentCircleRadius = widget.radius;
     if (userLocations.isNotEmpty) {
       _circlePosition = userLocations[0]['location'];
     }
     //updating locations
-    Timer.periodic(Duration(minutes: 1), (Timer timer) {
+    Timer.periodic(Duration(minutes: widget.timeInterval), (Timer timer) async{
       // call function to update user locations
-      updateFirstUserLocation(); // demo x
+      var url = Uri.http("${widget.ip}:8000", "locations");
+      
+      Map body = {
+        "username": widget.username,
+        "location": "${currentLocation!.latitude!} ${currentLocation!.longitude!}",
+        //mozda dodam address ak mi se bude dalo :/
+        "address": ""
+      };
+
+      http.Response? response;
+      try{
+        response = await http.post(url, body: body);
+      } catch (err){
+        toast("Server nije pronađen");
+      }
+      
+      if(response != null && response.statusCode == 400){
+         toast("Nije moguće poslati lokaciju");
+      }
+      
+      // jos treba dohvatit ostale lokacije
     });
   }
 
@@ -122,10 +170,18 @@ class MapSampleState extends State<MapSample> {
     );
   }
 
+<<<<<<< HEAD
   Future<void> goToLoc(LatLng pos) async {
     final GoogleMapController controller = await _controller.future;
     await controller.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(
             bearing: 0.0, target: pos, tilt: 0.0, zoom: defaultZoom)));
+=======
+
+  void updateCircleRadius(double newRadius) {
+    setState(() {
+      _currentCircleRadius = newRadius;
+    });
+>>>>>>> cb08bef (postavljanje vlastite lokacije na server)
   }
 }
