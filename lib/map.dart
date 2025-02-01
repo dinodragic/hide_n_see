@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -25,13 +26,11 @@ class MapSample extends StatefulWidget {
 }
 
 
-
-
 // STATE!!!
 class MapSampleState extends State<MapSample> {
-  final Completer<GoogleMapController> _controller =
-      Completer<GoogleMapController>();
+  
   static const double defaultZoom = 15.0;
+<<<<<<< HEAD
 
 
   LocationData? currentLocation;
@@ -73,6 +72,9 @@ class MapSampleState extends State<MapSample> {
   List<Map<String, dynamic>> userLocations = [];
 
   List<BitmapDescriptor> pinIcons = [
+=======
+  final List<BitmapDescriptor> pinIcons = [
+>>>>>>> a661eae (slanje vlastite lokacije na server)
     BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
     BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
     BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
@@ -85,40 +87,36 @@ class MapSampleState extends State<MapSample> {
     BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),
   ];
 
+  double _currentCircleRadius = 0.0;
+  LatLng _circlePosition = const LatLng(0, 0);
+  Map<String, Map<String, String>> userLocations = {};
+  LocationData? currentLocation;
 
+<<<<<<< HEAD
 >>>>>>> cb08bef (postavljanje vlastite lokacije na server)
+=======
+
+
+  final Completer<GoogleMapController> _controller = Completer();
+  
+  
+  
+>>>>>>> a661eae (slanje vlastite lokacije na server)
   @override
   void initState() {
     getCurrentLocation();
     super.initState();
-    _currentCircleRadius = widget.radius;
-    if (userLocations.isNotEmpty) {
-      _circlePosition = userLocations[0]['location'];
-    }
-    //updating locations
-    Timer.periodic(Duration(minutes: widget.timeInterval), (Timer timer) async{
-      // call function to update user locations
-      var url = Uri.http("${widget.ip}:8000", "locations");
-      
-      Map body = {
-        "username": widget.username,
-        "location": "${currentLocation!.latitude!} ${currentLocation!.longitude!}",
-        //mozda dodam address ak mi se bude dalo :/
-        "address": ""
-      };
 
-      http.Response? response;
-      try{
-        response = await http.post(url, body: body);
-      } catch (err){
-        toast("Server nije pronađen");
-      }
-      
-      if(response != null && response.statusCode == 400){
-         toast("Nije moguće poslati lokaciju");
-      }
-      
-      // jos treba dohvatit ostale lokacije
+    getCurrentLocation();
+
+    _currentCircleRadius = widget.radius;
+    _circlePosition = LatLng(currentLocation!.latitude!, currentLocation!.longitude!);
+
+    
+    Timer.periodic(const Duration(seconds: 10), (Timer timer) async{
+      // call function to update user locations
+      sendMyLocation();
+      //getOtherLocations(url);
     });
   }
 
@@ -129,19 +127,33 @@ class MapSampleState extends State<MapSample> {
   @override
   Widget build(BuildContext context) {
     Set<Marker> markers = {};
-    for (var i = 0; i < userLocations.length; i++) {
-      var location = userLocations[i];
-      var pinIcon = pinIcons[i % pinIcons.length];
-      markers.add(
-        Marker(
-          markerId: MarkerId(location["username"]),
-          position: location["location"],
-          infoWindow: InfoWindow(title: location["username"]),
-          icon: pinIcon,
-        ),
-      );
+
+    // add other users
+    int i=0;
+    for (var location in userLocations.entries) {
+      if(location.value["location"] != null){
+        
+        List<String> coords = location.value["location"]!.split(" ");
+        LatLng latLng = LatLng(double.parse(coords[0]), double.parse(coords[1]));
+        
+        i++;
+        var pinIcon = pinIcons[i % pinIcons.length];
+
+        markers.add(
+          Marker(
+            markerId: MarkerId(location.key),
+            position: latLng,
+            infoWindow: InfoWindow(
+              title: location.key,
+              snippet: location.value["address"]
+              ),
+            icon: pinIcon,
+          ),
+        );
+      }
     }
     return Scaffold(
+<<<<<<< HEAD
       body: currentLocation == null
         ? const Center(child: Text("Loading"))
         : GoogleMap(
@@ -154,6 +166,20 @@ class MapSampleState extends State<MapSample> {
             ),
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
+=======
+
+      body: currentLocation == null
+      //poboljsat loading screen treba
+      ? const Center(child: Text("Loading"))
+      : GoogleMap(
+        mapType: MapType.normal,
+        initialCameraPosition: CameraPosition(
+          target: _circlePosition, // camera position to the circle's position
+          zoom: defaultZoom,
+        ),
+        onMapCreated: (mapController) {
+          _controller.complete(mapController);
+>>>>>>> a661eae (slanje vlastite lokacije na server)
         },
         markers: {
           Marker(
@@ -163,8 +189,13 @@ class MapSampleState extends State<MapSample> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
+<<<<<<< HEAD
         onPressed: () => goToLoc(LatLng(currentLocation!.latitude!, currentLocation!.longitude!)),
         label: const Text('My Location'),
+=======
+        onPressed: () => getOtherLocations(),
+        label: const Text('Get locations'),
+>>>>>>> a661eae (slanje vlastite lokacije na server)
         icon: const Icon(Icons.gps_fixed),
       ),
     );
@@ -177,6 +208,67 @@ class MapSampleState extends State<MapSample> {
         CameraPosition(
             bearing: 0.0, target: pos, tilt: 0.0, zoom: defaultZoom)));
 =======
+
+  void getCurrentLocation() async {
+    Location location = Location();
+    location.getLocation().then(
+      (location) {
+        currentLocation = location;
+      },
+    );
+
+    location.onLocationChanged.listen(
+      (newLoc) {
+        currentLocation = newLoc;
+        setState(() {});
+      },
+    );
+  }
+
+  void sendMyLocation() async {
+
+    Map body = {
+      "username": widget.username,
+      "location": "${currentLocation!.latitude!} ${currentLocation!.longitude!}",
+      //mozda dodam address ak mi se bude dalo :/
+      "address": ""
+    };
+
+    Uri url = Uri.http("${widget.ip}:8000", "locations");
+    http.Response? response;
+    try{
+      response = await http.post(url, body: body);
+    } catch (err){
+      toast("Server nije pronađen");
+    }
+      
+    if(response != null && response.statusCode == 400){
+      toast("Nije moguće poslati lokaciju");
+    }
+  }
+
+  void getOtherLocations() async {
+    Uri url = Uri.http("${widget.ip}:8000", "locations");
+    http.Response? response;
+
+    try{
+      response = await http.get(url);
+    } catch (err){
+      toast("Server nije pronađen");
+    }
+
+    if(response != null){
+      if(response.statusCode == 200){
+        var locations = jsonDecode(response.body);
+        setState(() {
+          userLocations = locations;
+        });
+      }
+      else{
+        toast("Nije moguće primiti lokacije");
+      }
+    }
+  }
 
   void updateCircleRadius(double newRadius) {
     setState(() {
