@@ -1,5 +1,8 @@
 # Hide&See
 
+![image](https://github.com/user-attachments/assets/a0df99b2-408c-4c54-aab3-41cb2c142b7b)
+
+
 ## Što je Hide&See?
 Kako bi igra bila dinamična i uzbudljiva, Hide&See omogućuje jednoj osobi da
 preuzme ulogu lovca dok se ostali sudionici skrivaju po gradu. Kroz mobilnu
